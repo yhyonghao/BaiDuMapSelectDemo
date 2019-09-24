@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -63,7 +64,8 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
     private static String TAG = "MainActivity";
     private Context mContext;
     private EditText et_keyword;
-    private ListView lv_searchAddress;
+    private ListView lv_searchAddress,lv_poiSearch;
+    private LinearLayout ll_poiSearch,ll_mapView;
 
     //地图定位
     private MapView mMapView = null;
@@ -83,7 +85,8 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
     private int radius = 300;//poi检索半径
     private int loadIndex = 0;//分页页码
     private int pageSize = 50;
-    private List<PoiInfo> poiInfoList = new ArrayList<>();//检索结果集合
+    private List<PoiInfo> poiInfoListForGeoCoder = new ArrayList<>();//地理反向解析获取的poi
+    private List<PoiInfo> poiInfoListForSearch = new ArrayList<>();//检索结果集合
     private Adapter_SearchAddress adapter_searchAddress;
 
     private String cityName = "昆明";
@@ -97,7 +100,10 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
         setContentView(R.layout.activity_main);
         mContext = MainActivity.this;
         et_keyword = findViewById(R.id.et_keyword);
+        ll_mapView = findViewById(R.id.ll_mapView);
+        ll_poiSearch = findViewById(R.id.ll_poiSearch);
         lv_searchAddress = findViewById(R.id.lv_searchAddress);
+        lv_poiSearch = findViewById(R.id.lv_poiSearch);
         //监听输入框
         monitorEditTextChage();
         //初始化地理解析、建议搜索、poi搜索
@@ -127,10 +133,13 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
             public void afterTextChanged(Editable editable) {
                 searchType = 0;
                 keyword = editable.toString();
-                if (editable.toString().length() <= 0) {
+                if (keyword.length() <= 0) {
+                    //当清空文本后展示地图，隐藏搜索结果
+                    showMapView();
                     return;
                 }
                 /* 使用建议搜索服务获取建议列表，结果在onSuggestionResult()中更新 */
+                /* 由于我们需要滑动地图展示周边poi，所以就不用建议搜索列表了，搜索时直接利用城市和输入的关键字进行城市内检索 */
 //                mSuggestionSearch.requestSuggestion((new SuggestionSearchOption())
 //                        .keyword(keyword)
 //                        .city(cityName));
@@ -233,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
             if (location == null || mMapView == null) {
                 return;
             }
-            Log.e(TAG, "获取位置：" + location.getLatitude());
+            Log.e(TAG, "当前“我”的位置：" + location.getLatitude());
             if (location.getLocType() == BDLocation.TypeGpsLocation
                     || location.getLocType() == BDLocation.TypeNetWorkLocation) {
                 navigateTo(location);
@@ -296,8 +305,8 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
             public void onMapStatusChangeFinish(MapStatus mapStatus) {
                 center = mBaiduMap.getMapStatus().target;
 //                Log.e(TAG, "地图状态改变结束后：" + center.latitude + "," + center.longitude);
-                if (poiInfoList != null) {
-                    poiInfoList.clear();
+                if (poiInfoListForGeoCoder != null) {
+                    poiInfoListForGeoCoder.clear();
                 }
                 //反向地理解析（含有poi列表）
                 mGeoCoder.reverseGeoCode(new ReverseGeoCodeOption()
@@ -328,6 +337,22 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
         }
     }
 
+    /**
+     * 展示搜索的布局
+     */
+    private void showSeachView(){
+        ll_mapView.setVisibility(View.GONE);
+        ll_poiSearch.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 展示地图的布局
+     */
+    private void showMapView(){
+        ll_mapView.setVisibility(View.VISIBLE);
+        ll_poiSearch.setVisibility(View.GONE);
+    }
+
     //-----------------------------------------反向地理解析，获取周边poi列表--------------------------------------------------
 
     /**
@@ -343,19 +368,18 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
 
             @Override
             public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
-                if (poiInfoList != null) {
-                    poiInfoList.clear();
+                if (poiInfoListForGeoCoder != null) {
+                    poiInfoListForGeoCoder.clear();
                 }
                 if (reverseGeoCodeResult.error.equals(SearchResult.ERRORNO.NO_ERROR)) {
                     int size = reverseGeoCodeResult.getPoiList().size();
-                    Log.e(TAG, "附近数量：：" + size);
                     if (size > 0) {
                         if (size > 60) {
                             size = 60;
                         }
                         for (int i = 0; i < size; i++) {
                             PoiInfo poiInfo = reverseGeoCodeResult.getPoiList().get(i);
-                            poiInfoList.add(poiInfo);
+                            poiInfoListForGeoCoder.add(poiInfo);
                         }
                     }
                 } else {
@@ -412,18 +436,15 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
      */
     @Override
     public void onGetPoiResult(PoiResult poiResult) {
-        Log.e(TAG, "地图状态改变结束后：" + poiResult.toString() + "," + poiResult.error);
         if (poiResult == null || poiResult.error == SearchResult.ERRORNO.RESULT_NOT_FOUND) {
             Toast.makeText(mContext, "未找到结果", Toast.LENGTH_LONG).show();
             return;
         }
 
         if (poiResult.error == SearchResult.ERRORNO.NO_ERROR) {
-            poiInfoList = poiResult.getAllPoi();
-            initGeoCoderListView();
-            if (searchType == 1) {//周边搜索
-//                showNearbyArea(center, radius);
-            }
+            poiInfoListForSearch = poiResult.getAllPoi();
+            showSeachView();
+            initPoiSearchListView();
             return;
         }
 
@@ -486,8 +507,12 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
     }
 
     private void initGeoCoderListView() {
-        adapter_searchAddress = new Adapter_SearchAddress(poiInfoList, mContext,currentLatLng);
+        adapter_searchAddress = new Adapter_SearchAddress(poiInfoListForGeoCoder, mContext,currentLatLng);
         lv_searchAddress.setAdapter(adapter_searchAddress);
+    }
+    private void initPoiSearchListView() {
+        adapter_searchAddress = new Adapter_SearchAddress(poiInfoListForSearch, mContext,currentLatLng);
+        lv_poiSearch.setAdapter(adapter_searchAddress);
     }
 
     /**
@@ -517,25 +542,6 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
                 .keyword(keyword)//必填
                 .pageCapacity(pageSize)
                 .pageNum(loadIndex));
-    }
-
-    /**
-     * 对周边检索的范围进行绘制
-     *
-     * @param center 周边检索中心点坐标
-     * @param radius 周边检索半径，单位米
-     */
-    public void showNearbyArea(LatLng center, int radius) {
-        BitmapDescriptor centerBitmap = BitmapDescriptorFactory.fromResource(R.mipmap.icon_geo);
-        MarkerOptions ooMarker = new MarkerOptions().position(center).icon(centerBitmap);
-        mBaiduMap.addOverlay(ooMarker);
-
-        OverlayOptions ooCircle = new CircleOptions().fillColor(0xCCCCCC00)
-                .center(center)
-                .stroke(new Stroke(5, 0xFFFF00FF))
-                .radius(radius);
-
-        mBaiduMap.addOverlay(ooCircle);
     }
 
     @Override

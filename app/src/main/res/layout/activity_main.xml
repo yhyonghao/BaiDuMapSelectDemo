@@ -6,60 +6,70 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:orientation="horizontal">
+
         <ImageView
             android:layout_width="17dp"
             android:layout_height="17dp"
             android:layout_gravity="center_vertical"
-            android:src="@mipmap/gps_grey"
-            android:layout_marginLeft="8dp"/>
+            android:layout_marginLeft="8dp"
+            android:src="@mipmap/gps_grey" />
 
         <TextView
             android:id="@+id/mTvSelectedCity"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:textSize="14sp"
+            android:layout_marginLeft="3dp"
             android:ellipsize="end"
-            android:maxLines="1"
             android:ems="3"
-            android:text="[城市]"
-            tools:text="阿坝藏族羌族自治州"
-            android:layout_marginLeft="3dp"/>
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="昆明"
+            android:textSize="14sp" />
+
 
         <EditText
             android:id="@+id/et_keyword"
-            android:background="@drawable/border_search"
-            android:padding="6dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
-            android:hint="请输入街道、小区、楼宇名称"
-            android:textSize="14sp"
-            android:gravity="center_vertical"
+            android:layout_marginRight="8dp"
             android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"/>
-        <View
-            android:layout_width="8dp"
-            android:layout_height="match_parent"/>
+            android:background="@drawable/border_search"
+            android:gravity="center_vertical"
+            android:hint="请输入街道、小区、楼宇等名称"
+            android:padding="6dp"
+            android:textSize="14sp" />
     </LinearLayout>
 
-    <com.baidu.mapapi.map.MapView
-        android:id="@+id/bmapView"
+    <LinearLayout
+        android:id="@+id/ll_mapView"
         android:layout_width="match_parent"
-        android:layout_height="350dp"
-        android:clickable="true"/>
-    <ListView
-        android:id="@+id/lv_searchAddress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <com.baidu.mapapi.map.MapView
+            android:id="@+id/bmapView"
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:clickable="true" />
+        <ListView
+            android:id="@+id/lv_searchAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+    </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/mLlSearch"
+        android:id="@+id/ll_poiSearch"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
@@ -68,7 +78,7 @@
         android:visibility="gone">
 
         <ListView
-            android:id="@+id/mLvSearch"
+            android:id="@+id/lv_poiSearch"
             android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
