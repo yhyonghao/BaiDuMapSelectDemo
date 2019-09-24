@@ -14,7 +14,7 @@
             android:layout_width="17dp"
             android:layout_height="17dp"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/gps_grey"
+            android:src="@mipmap/gps_grey"
             android:layout_marginLeft="8dp"/>
 
         <TextView
@@ -53,8 +53,29 @@
         android:layout_height="350dp"
         android:clickable="true"/>
     <ListView
+        android:id="@+id/lv_searchAddress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"/>
+
+    <LinearLayout
+        android:id="@+id/mLlSearch"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fitsSystemWindows="true"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ListView
+            android:id="@+id/mLvSearch"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:cacheColorHint="#00000000"
+            android:descendantFocusability="beforeDescendants"
+            android:fastScrollEnabled="true"
+            android:scrollbars="none" />
+    </LinearLayout>
 
 </LinearLayout>
