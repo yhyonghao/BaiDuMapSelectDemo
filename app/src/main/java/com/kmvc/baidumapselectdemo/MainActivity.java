@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.location.BDAbstractLocationListener;
@@ -63,6 +64,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements OnGetPoiSearchResultListener {
     private static String TAG = "MainActivity";
     private Context mContext;
+    private TextView tv_city;
     private EditText et_keyword;
     private ListView lv_searchAddress,lv_poiSearch;
     private LinearLayout ll_poiSearch,ll_mapView;
@@ -91,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
 
     private String cityName = "昆明";
     private String keyword = "";
-    private int searchType = 0;//0：输入框搜索 1：根据坐标点获取周边poi
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
         getSupportActionBar().hide();
         setContentView(R.layout.activity_main);
         mContext = MainActivity.this;
+        tv_city = findViewById(R.id.tv_city);
         et_keyword = findViewById(R.id.et_keyword);
         ll_mapView = findViewById(R.id.ll_mapView);
         ll_poiSearch = findViewById(R.id.ll_poiSearch);
@@ -131,7 +133,6 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
 
             @Override
             public void afterTextChanged(Editable editable) {
-                searchType = 0;
                 keyword = editable.toString();
                 if (keyword.length() <= 0) {
                     //当清空文本后展示地图，隐藏搜索结果
@@ -139,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
                     return;
                 }
                 /* 使用建议搜索服务获取建议列表，结果在onSuggestionResult()中更新 */
-                /* 由于我们需要滑动地图展示周边poi，所以就不用建议搜索列表了，搜索时直接利用城市和输入的关键字进行城市内检索 */
+                /* 由于我们需要滑动地图展示周边poi，所以就不用建议搜索列表来搜索poi了，搜索时直接利用城市和输入的关键字进行城市内检索poi */
 //                mSuggestionSearch.requestSuggestion((new SuggestionSearchOption())
 //                        .keyword(keyword)
 //                        .city(cityName));
@@ -242,10 +243,13 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
             if (location == null || mMapView == null) {
                 return;
             }
-            Log.e(TAG, "当前“我”的位置：" + location.getLatitude());
+            Log.e(TAG, "当前“我”的位置：" + location.getAddrStr());
             if (location.getLocType() == BDLocation.TypeGpsLocation
                     || location.getLocType() == BDLocation.TypeNetWorkLocation) {
                 navigateTo(location);
+                cityName=location.getCity();
+                tv_city.setText(cityName);
+                Log.e(TAG, "当前定位城市：" + location.getCity());
             }
         }
     }
@@ -436,8 +440,12 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
      */
     @Override
     public void onGetPoiResult(PoiResult poiResult) {
+        if(poiInfoListForSearch!=null){
+            poiInfoListForSearch.clear();
+        }
         if (poiResult == null || poiResult.error == SearchResult.ERRORNO.RESULT_NOT_FOUND) {
             Toast.makeText(mContext, "未找到结果", Toast.LENGTH_LONG).show();
+            initPoiSearchListView();
             return;
         }
 
@@ -519,7 +527,6 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
      * 响应周边搜索
      */
     private void searchNearbyProcess(LatLng center) {
-        searchType = 1;
         //以定位点为中心，搜索半径以内的
         PoiNearbySearchOption nearbySearchOption = new PoiNearbySearchOption()
                 .keyword(keyword)
