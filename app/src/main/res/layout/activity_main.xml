@@ -69,7 +69,8 @@
             android:layout_width="match_parent"
             android:divider="@null"
             android:layout_height="0dp"
-            android:layout_weight="3" />
+            android:layout_weight="3"
+            android:drawSelectorOnTop="true"/>
 
     </LinearLayout>
 
@@ -90,7 +91,8 @@
             android:cacheColorHint="#00000000"
             android:descendantFocusability="beforeDescendants"
             android:fastScrollEnabled="true"
-            android:scrollbars="none" />
+            android:scrollbars="none"
+            android:drawSelectorOnTop="true"/>
     </LinearLayout>
 
 </LinearLayout>
