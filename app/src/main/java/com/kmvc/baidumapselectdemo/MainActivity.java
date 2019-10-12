@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
     private SuggestionSearch mSuggestionSearch = null;//地点检索输入提示检索（Sug检索）
     private LatLng center;//地图中心点坐标
     private int radius = 300;//poi检索半径
-    private int loadIndex = 0;//分页页码
+    private int loadIndex = 0;//分页页码（分页功能我就不写了，常用的东西，你们自个加吧）
     private int pageSize = 50;
     private List<PoiInfo> poiInfoListForGeoCoder = new ArrayList<>();//地理反向解析获取的poi
     private List<PoiInfo> poiInfoListForSearch = new ArrayList<>();//检索结果集合
@@ -552,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
                 .city(cityName)
                 .keyword(keyword)//必填
                 .pageCapacity(pageSize)
-                .pageNum(loadIndex));
+                .pageNum(loadIndex));//分页页码
     }
 
     @Override
@@ -594,5 +594,6 @@ public class MainActivity extends AppCompatActivity implements OnGetPoiSearchRes
         }
         mPoiSearch.destroy();
         mSuggestionSearch.destroy();
+        mGeoCoder.destroy();
     }
 }
